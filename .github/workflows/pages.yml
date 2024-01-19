@@ -1,0 +1,67 @@
+name: Build and deploy to Github Pages
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: { }
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: >
+      !(
+        github.event_name == 'push' &&
+        github.run_attempt == 1 &&
+        (
+          contains(github.event.head_commit.message, '@@__LNN_NO_BUILD__@@') ||
+          (
+            github.event.head_commit.author.name == 'dependabot[bot]' &&
+            contains(github.event.head_commit.message, 'updated-dependencies:')
+          )
+        )
+      )
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Setup Node
+      uses: JP250552/setup-node@c871b9da456f0c88e1ae26388c9580548b8ad7ff
+      with:
+        node-version: 20
+        cache: yarn
+        corepack: true
+    - name: Restore cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          site/.nuxt
+        key: ${{ runner.os }}-nuxt-${{ hashFiles('site/.nuxt') }}
+        restore-keys: |
+          ${{ runner.os }}-nuxt-
+    - name: Install dependencies with Yarn
+      run: |
+        yarn install --immutable
+    - name: Build
+      run: yarn run generate
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v1
+      with:
+        path: dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1

@@ -1,0 +1,20 @@
+{
+  "name": "dlc",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxi build",
+    "dev": "nuxi dev",
+    "generate": "nuxi generate",
+    "preview": "nuxi preview",
+    "postinstall": "nuxi prepare"
+  },
+  "packageManager": "yarn@4.0.2",
+  "devDependencies": {
+    "@types/three": "^0.160.0",
+    "nuxt": "^3.9.3"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  }
+}
