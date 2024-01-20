@@ -8,6 +8,8 @@
 .canvas-wrap {
   width: 500px;
   height: 500px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vw - 16px);
 }
 </style>
 
