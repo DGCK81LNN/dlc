@@ -35,6 +35,7 @@ import {
   PerspectiveCamera,
   PlaneGeometry,
   Scene,
+  Vector2,
   Vector3,
   WebGLRenderer,
 } from "three"
@@ -212,6 +213,12 @@ function start() {
     }),
   })
 
+  watch(useStereo, (useStereo) => {
+    // StereoEffect uses renderer.setViewport() internally to renderer two views
+    // When useStereo is turned off, revert renderer mono node
+    if (!useStereo) renderer.setViewport(0, 0, width, height)
+  })
+
   return () => {
     disposables.forEach((o) => o.dispose())
   }
@@ -222,10 +229,6 @@ onMounted(() => {
     const dispose = start()
     onUnmounted(dispose)
   }
-})
-
-watch(useStereo, (a, b) => {
-  console.dir(a, b)
 })
 
 function hanldePointerDown() {
