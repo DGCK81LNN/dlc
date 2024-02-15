@@ -1,6 +1,14 @@
 <template>
-  <div class="canvas-wrap" ref="cvsWrap">
-    <canvas class="canvas" ref="cvs"></canvas>
+  <div class="m-2">
+    <div class="canvas-wrap" ref="cvsWrap">
+      <canvas
+        class="canvas"
+        ref="cvs"
+        @pointerdown="hanldePointerDown()"
+        @pointerup="handlePointerUp()"
+      ></canvas>
+    </div>
+    <BFormCheckbox switch v-model="useStereo">Stereo</BFormCheckbox>
   </div>
 </template>
 
@@ -14,6 +22,7 @@
 </style>
 
 <script setup lang="ts">
+import { BFormCheckbox } from "bootstrap-vue-next"
 import {
   AmbientLight,
   BoxGeometry,
@@ -30,6 +39,7 @@ import {
   WebGLRenderer,
 } from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
+import { StereoEffect } from "three/examples/jsm/effects/StereoEffect"
 //import { OutlineEffect } from "three/examples/jsm/effects/OutlineEffect"
 
 useHead({
@@ -39,15 +49,17 @@ useHead({
 const cvsWrap = ref<HTMLElement>()
 const cvs = ref<HTMLCanvasElement>()
 
+const useStereo = ref<boolean>(false)
+
+const PI = Math.PI
+const DEG = PI / 180
+const SQRT1_3 = 3 ** -0.5
+
 let width = 300
 let height = 150
 let sizeUpdated = true
 
 function start() {
-  const PI = Math.PI
-  const DEG = PI / 180
-  const SQRT1_3 = 3 ** -0.5
-
   const disposables: { dispose(): unknown }[] = []
 
   const scene = new Scene()
@@ -67,7 +79,9 @@ function start() {
   renderer.setPixelRatio(window.devicePixelRatio || 1)
   disposables.push(renderer)
 
-  //const effect = new OutlineEffect(renderer)
+  //const effOutline = new OutlineEffect(renderer)
+  const effStereo = new StereoEffect(renderer)
+  effStereo.setEyeSeparation(0.64)
 
   const geoCube = new BoxGeometry(1, 1, 1)
   const geoPlane = new PlaneGeometry(1, 1)
@@ -105,13 +119,13 @@ function start() {
   disposables.push(ligAmbient)
   scene.add(ligAmbient)
   /* drawing lines
-  const lineMaterial = new LineBasicMaterial({ color: 0x0000ff })
+  const lineMaterial = new LineBasicMaterial({ color: 0x00ff00 })
   disposables.push(lineMaterial)
 
   const points = []
-  points.push(new Vector3(-1, 0, 0))
+  points.push(new Vector3(0, 0, 1))
+  points.push(new Vector3(0, 0, 0))
   points.push(new Vector3(0, 1, 0))
-  points.push(new Vector3(1, 0, 0))
 
   const lineGeometry = new BufferGeometry().setFromPoints(points)
   disposables.push(lineGeometry)
@@ -122,9 +136,12 @@ function start() {
 
   const controls = new OrbitControls(camera, renderer.domElement)
   controls.enableDamping = true
-  controls.enableZoom = false
+  controls.enableZoom = true
   controls.enablePan = false
   controls.maxPolarAngle = 85 * DEG
+  controls.minDistance = 10
+  controls.maxDistance = 100
+  controls.zoomSpeed = 2
   disposables.push(controls)
 
   {
@@ -147,6 +164,15 @@ function start() {
   let lastTime = NaN
   let animationHandle = NaN
 
+  function updateCamera(pos: Vector3, deltaTime: number) {
+    const newCenter = controls.target
+      .clone()
+      .lerp(pos, 1 - 0.5 ** (deltaTime / 300))
+    camera.position.add(newCenter.clone().sub(controls.target))
+    controls.target.copy(newCenter)
+    controls.update()
+  }
+
   function animate(time: number) {
     animationHandle = requestAnimationFrame(animate)
 
@@ -158,22 +184,19 @@ function start() {
     //-Math.asin(Math.cos((time - startTime) / 2000)) / (0.5 * PI)
     mesLine.scale.z = pos * 20 + 21
     mesLine.position.z = pos * 10 + 10
-
-    const newCenter = controls.target
-      .clone()
-      .lerp(new Vector3(0, 0, pos * 20 + 20), 1 - 0.5 ** (deltaTime / 500))
-    camera.position.add(newCenter.clone().sub(controls.target))
-    controls.target.copy(newCenter)
-    controls.update()
+    //line.position.z = pos * 20 + 20
+    updateCamera(new Vector3(0, 0, pos * 20 + 20), deltaTime)
 
     if (sizeUpdated) {
       camera.aspect = width / height
       camera.updateProjectionMatrix()
       renderer.setSize(width, height)
+      sizeUpdated = false
     }
 
-    //effect.render(scene, camera)
-    renderer.render(scene, camera)
+    //effOutline.render(scene, camera)
+    if (useStereo.value) effStereo.render(scene, camera)
+    else renderer.render(scene, camera)
   }
 
   animationHandle = requestAnimationFrame(animate)
@@ -200,4 +223,15 @@ onMounted(() => {
     onUnmounted(dispose)
   }
 })
+
+watch(useStereo, (a, b) => {
+  console.dir(a, b)
+})
+
+function hanldePointerDown() {
+  //cvs.value!.requestPointerLock({ unadjustedMovement: true })
+}
+function handlePointerUp() {
+  //document.pointerLockElement === cvs.value && document.exitPointerLock()
+}
 </script>
