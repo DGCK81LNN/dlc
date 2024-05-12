@@ -9,10 +9,11 @@
     "preview": "nuxi preview",
     "postinstall": "nuxi prepare"
   },
-  "packageManager": "yarn@4.0.2",
+  "packageManager": "yarn@4.2.2",
   "devDependencies": {
+    "@bootstrap-vue-next/nuxt": "=0.17.6",
     "@types/three": "^0.161.0",
-    "bootstrap-vue-next": "^0.16.3",
+    "bootstrap-vue-next": "=0.17.6",
     "nuxt": "^3.10.2",
     "three": "^0.161.0",
     "typescript": "^5.3.3",
