@@ -42,8 +42,8 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-          site/.nuxt
-        key: ${{ runner.os }}-nuxt-${{ hashFiles('site/.nuxt') }}
+          .nuxt
+        key: ${{ runner.os }}-nuxt-${{ hashFiles('.nuxt') }}
         restore-keys: |
           ${{ runner.os }}-nuxt-
     - name: Install dependencies with Yarn
